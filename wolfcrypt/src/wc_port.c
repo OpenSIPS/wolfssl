@@ -2085,7 +2085,59 @@ int wolfSSL_CryptHwMutexUnLock(void)
 #elif defined(WOLFSSL_USER_MUTEX)
 
     /* Use user own mutex */
+
+    static user_mutex_cb* custom_mutex_cb = NULL;
+
+    int wolfSSL_SetUserMutexCb(user_mutex_cb* cb)
+    {
+        custom_mutex_cb = cb;
+        return 0;
+    }
+
+    int wc_InitMutex(wolfSSL_Mutex* m) {
+        if (custom_mutex_cb != NULL) {
+            return (custom_mutex_cb(m, WOLFSSL_USER_MUTEX_INIT) < 0) ?
+                BAD_MUTEX_E : 0;
+        }
+        else {
+            WOLFSSL_MSG("User mutex callback function not set");
+            return BAD_STATE_E;
+        }
+    }
+
+    int wc_FreeMutex(wolfSSL_Mutex *m) {
+        if (custom_mutex_cb != NULL) {
+            return (custom_mutex_cb(m, WOLFSSL_USER_MUTEX_FREE) < 0) ?
+                BAD_MUTEX_E : 0;
+        }
+        else {
+            WOLFSSL_MSG("User mutex callback function not set");
+            return BAD_STATE_E;
+        }
+    }
+
+    int wc_LockMutex(wolfSSL_Mutex *m) {
+        if (custom_mutex_cb != NULL) {
+            return (custom_mutex_cb(m, WOLFSSL_USER_MUTEX_LOCK) < 0) ?
+                BAD_MUTEX_E : 0;
+        }
+        else {
+            WOLFSSL_MSG("User mutex callback function not set");
+            return BAD_STATE_E;
+        }
+    }
     
+    int wc_UnLockMutex(wolfSSL_Mutex *m) {
+        if (custom_mutex_cb != NULL) {
+            return (custom_mutex_cb(m, WOLFSSL_USER_MUTEX_UNLOCK) < 0) ?
+                BAD_MUTEX_E : 0;
+        }
+        else {
+            WOLFSSL_MSG("Mutex call back function not set");
+            return BAD_STATE_E;
+        }
+    }
+
     /*
     int wc_InitMutex(wolfSSL_Mutex* m) { ... }
     int wc_FreeMutex(wolfSSL_Mutex *m) { ... }
