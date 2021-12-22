@@ -804,6 +804,18 @@
         typedef M2MB_OS_MTX_HANDLE wolfSSL_Mutex;
     #elif defined(WOLFSSL_USER_MUTEX)
         /* typedef User_Mutex wolfSSL_Mutex; */
+        typedef struct _wolfSSL_Mutex {
+            void *mutex;
+        } wolfSSL_Mutex;
+
+        typedef int (user_mutex_cb)(wolfSSL_Mutex *m, int op);
+
+        WOLFSSL_API int wolfSSL_SetUserMutexCb(user_mutex_cb* cb);
+
+        #define WOLFSSL_USER_MUTEX_INIT 0
+        #define WOLFSSL_USER_MUTEX_FREE 1
+        #define WOLFSSL_USER_MUTEX_LOCK 2
+        #define WOLFSSL_USER_MUTEX_UNLOCK 3
     #elif defined(WOLFSSL_LINUXKM)
         typedef struct mutex wolfSSL_Mutex;
     #else
